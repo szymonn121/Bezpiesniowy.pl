@@ -1,0 +1,3 @@
+{
+  "/api/songs/random/route": "app/api/songs/random/route.js"
+}
