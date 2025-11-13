@@ -114,7 +114,9 @@ export function AudioGuessGame() {
       if (audioRef.current) {
         audioRef.current.src = "";
       }
-      const audio = new Audio(data.audioUrl);
+      // Ensure absolute URL (helps when basePath or origin matters)
+      const audioUrl = typeof window !== "undefined" && data.audioUrl?.startsWith("/") ? `${window.location.origin}${data.audioUrl}` : data.audioUrl;
+      const audio = new Audio(audioUrl as string);
       audioRef.current = audio;
       audio.addEventListener("ended", () => {
         setIsPlaying(false);
