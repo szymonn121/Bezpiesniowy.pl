@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import jwt, { Secret } from "jsonwebtoken";
+import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
 import { UserRole } from "@prisma/client";
 import type { NextRequest } from "next/server";
 
@@ -28,14 +28,12 @@ export async function verifyPassword(plain: string, hash: string): Promise<boole
 }
 
 export function signAuthToken(payload: AuthTokenPayload, expiresIn = "7d"): string {
-  const secret: Secret = getJwtSecret(); // <- rzutowanie na Secret dla jsonwebtoken v9+
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload as any, getJwtSecret() as Secret, { expiresIn } as SignOptions);
 }
 
 export function verifyAuthToken(token: string): AuthTokenPayload | null {
   try {
-    const secret: Secret = getJwtSecret();
-    return jwt.verify(token, secret) as AuthTokenPayload;
+    return jwt.verify(token, getJwtSecret() as Secret) as AuthTokenPayload;
   } catch {
     return null;
   }

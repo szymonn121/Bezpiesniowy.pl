@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import bcrypt from "bcryptjs";
-import { PrismaClient, UserRole } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 config();
 
@@ -20,12 +20,12 @@ async function main() {
     where: { email: adminEmail },
     update: {
       passwordHash,
-      role: UserRole.ADMIN,
+      role: "ADMIN",
     },
     create: {
       email: adminEmail,
       passwordHash,
-      role: UserRole.ADMIN,
+      role: "ADMIN",
     },
   });
 

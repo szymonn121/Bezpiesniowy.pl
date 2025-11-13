@@ -21,7 +21,12 @@ export async function GET() {
   }
 
   const audioUrl = `/audio/${song.fileName}`;
-  const hints = buildHints(song);
+  const hints = buildHints({
+    title: song.title,
+    artist: song.artist,
+    genre: song.genre ?? null,
+    year: song.year ?? null,
+  });
 
   return NextResponse.json({
     // include title/artist so client can reveal the answer when user skips

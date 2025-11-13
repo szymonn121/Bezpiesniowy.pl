@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Song } from "@prisma/client";
 import { requireAdmin } from "@/lib/server-auth";
 import path from "path";
 import { promises as fs } from "fs";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    songs: songs.map((song) => ({
+    songs: songs.map((song: Song) => ({
       id: song.id,
       title: song.title,
       artist: song.artist,
