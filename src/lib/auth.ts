@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 import { UserRole } from "@prisma/client";
 import type { NextRequest } from "next/server";
 
@@ -28,25 +28,23 @@ export async function verifyPassword(plain: string, hash: string): Promise<boole
 }
 
 export function signAuthToken(payload: AuthTokenPayload, expiresIn = "7d"): string {
-  return jwt.sign(payload, getJwtSecret(), { expiresIn });
+  const secret: Secret = getJwtSecret(); // <- rzutowanie na Secret dla jsonwebtoken v9+
+  return jwt.sign(payload, secret, { expiresIn });
 }
 
 export function verifyAuthToken(token: string): AuthTokenPayload | null {
   try {
-    return jwt.verify(token, getJwtSecret()) as AuthTokenPayload;
+    const secret: Secret = getJwtSecret();
+    return jwt.verify(token, secret) as AuthTokenPayload;
   } catch {
     return null;
   }
 }
 
 export function extractTokenFromHeader(header?: string | null): string | null {
-  if (!header) {
-    return null;
-  }
+  if (!header) return null;
   const [type, token] = header.split(" ");
-  if (type?.toLowerCase() !== "bearer" || !token) {
-    return null;
-  }
+  if (type?.toLowerCase() !== "bearer" || !token) return null;
   return token;
 }
 
@@ -55,4 +53,3 @@ export function getTokenFromCookies(request: NextRequest): string | null {
 }
 
 export { TOKEN_COOKIE };
-
