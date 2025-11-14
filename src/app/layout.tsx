@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getCurrentUserFromCookies } from "@/lib/server-auth";
 import { LogoutButton } from "@/components/LogoutButton";
+import MobileNav from "@/components/MobileNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +41,7 @@ export default async function RootLayout({
                 </span>
                 <span>Bezpieśniowy</span>
               </Link>
-              <nav className="flex items-center gap-4 text-sm font-medium text-slate-200">
+              <nav className="hidden sm:flex items-center gap-4 text-sm font-medium text-slate-200">
                 <Link href="/" className="transition hover:text-white">
                   Gra
                 </Link>
@@ -64,6 +65,11 @@ export default async function RootLayout({
                   </div>
                 )}
               </nav>
+              {/* Mobile burger menu */}
+              <div className="sm:hidden">
+                {/* MobileNav is a client component that handles its own state */}
+                <MobileNav userEmail={user?.email ?? null} userRole={user?.role ?? null} />
+              </div>
             </div>
           </header>
           <main className="flex-1 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-16">

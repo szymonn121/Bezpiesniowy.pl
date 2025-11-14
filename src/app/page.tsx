@@ -43,10 +43,6 @@ export default function Home() {
             </ul>
           </div>
         </div>
-        <p className="rounded-2xl border border-amber-500/30 bg-amber-100/70 px-5 py-4 text-sm text-amber-800 shadow-sm dark:border-amber-400/30 dark:bg-amber-900/40 dark:text-amber-100">
-          <strong>Uwaga prawna:</strong> wgrywaj wyłącznie pliki, do których posiadasz prawa lub licencję.
-          Projekt służy do użytku prywatnego i edukacyjnego. Odpowiadasz za zgodność z prawem autorskim.
-        </p>
       </section>
 
       <section id="gra" className="pb-16">
