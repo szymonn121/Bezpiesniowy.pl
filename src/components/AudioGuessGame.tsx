@@ -235,13 +235,13 @@ export function AudioGuessGame() {
   const canAdvance = challenge && maxUnlockedStage < durations.length;
 
   return (
-    <section className="grid gap-6 rounded-2xl border border-white/10 bg-white/70 p-6 shadow-lg backdrop-blur-sm transition dark:border-white/5 dark:bg-slate-900/70">
+    <section className="grid gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/70 p-4 sm:p-6 shadow-lg backdrop-blur-sm transition dark:border-white/5 dark:bg-slate-900/70">
       <header className="flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
-          Zgadnij polski utwór
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          Zgadnij utwór
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Odtwarzaj coraz dłuższe fragmenty (0.5s → 10s), zgadnij tytuł piosenki i zbieraj punkty.
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+          Odtwarzaj coraz dłuższe fragmenty (0.5s → 10s), zgadnij tytuł piosenki i zdobywaj punkty.
         </p>
         {error && <p className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-800 dark:bg-red-900/40 dark:text-red-200">{error}</p>}
       </header>
@@ -250,7 +250,7 @@ export function AudioGuessGame() {
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Fragmenty audio
         </h3>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
           {durations.map((duration, index) => {
             const unlocked = index <= maxUnlockedStage;
             const active = stageBeingPlayed === index;
@@ -260,7 +260,7 @@ export function AudioGuessGame() {
                 type="button"
                 onClick={() => handlePlayStage(index)}
                 disabled={!unlocked || isPlaying}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                className={`w-full sm:w-auto rounded-full border px-4 py-2 text-sm font-medium transition ${
                   active
                     ? "border-emerald-500 bg-emerald-500 text-white shadow"
                     : unlocked
@@ -316,11 +316,11 @@ export function AudioGuessGame() {
           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           disabled={feedback?.correct}
         />
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="submit"
             disabled={!guess.trim() || !!feedback?.correct}
-            className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow transition hover:bg-emerald-600 disabled:opacity-60"
+            className="w-full sm:w-auto rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow transition hover:bg-emerald-600 disabled:opacity-60"
           >
             Sprawdź odpowiedź
           </button>
@@ -329,7 +329,7 @@ export function AudioGuessGame() {
               type="button"
               onClick={handleNextSong}
               disabled={loadingChallenge}
-              className="rounded-full border border-emerald-400 px-5 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300"
+              className="w-full sm:w-auto rounded-full border border-emerald-400 px-5 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300"
             >
               Następna piosenka
             </button>
@@ -353,7 +353,7 @@ export function AudioGuessGame() {
                 resetAudio();
               }}
               disabled={loadingChallenge}
-              className="rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="w-full sm:w-auto rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Pomiń utwór
             </button>

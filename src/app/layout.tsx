@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bezpieśniowy · Zgadnij polską piosenkę",
+  title: "Bezpieśniowy · Zgadnij piosenkę",
   description:
-    "Bezpieśniowy to quiz muzyczny, w którym zgadujesz polskie piosenki po krótkich fragmentach audio. Własna baza MP3, lokalne odtwarzanie, panel administracyjny i JWT auth.",
+    "Bezpieśniowy to quiz muzyczny, w którym zgadujesz piosenki po krótkich fragmentach audio. Własna baza MP3, lokalne odtwarzanie, panel administracyjny i JWT auth.",
 };
 
 export default async function RootLayout({
@@ -76,6 +76,7 @@ export default async function RootLayout({
                 Pamiętaj o prawach autorskich. Wgrywaj jedynie pliki, do których masz uprawnienia
                 licencyjne.
               </p>
+              <p className="text-xs text-slate-400">Autor: Szymon Kubiak</p>
             </div>
           </footer>
         </div>

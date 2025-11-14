@@ -3,31 +3,31 @@ import { AudioGuessGame } from "@/components/AudioGuessGame";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-10 px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
       <section className="grid gap-8 rounded-3xl border border-white/20 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent p-10 shadow-2xl backdrop-blur-sm dark:border-white/5 dark:from-emerald-500/20">
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr] lg:items-center">
           <div className="grid gap-6">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">
-              Bezpieśniowy · MVP
+              Bezpieśniowy
             </p>
-            <h1 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white sm:text-5xl">
-              Zgaduj polskie piosenki po coraz dłuższych fragmentach audio
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-slate-900 dark:text-white">
+              Zgaduj piosenki po coraz dłuższych fragmentach audio
             </h1>
             <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-200">
               Wyzwanie dla uszu i pamięci muzycznej. Odsłuchuj krótkie próbki 0.5s, 1s, 2s, 5s i 10s,
               porównuj z ulubionymi przebojami i zdobywaj punkty. Całość działa lokalnie – wystarczy baza
               Twoich plików MP3.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="#gra"
-                className="rounded-full bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow transition hover:bg-emerald-600"
+                className="w-full sm:w-auto rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow transition hover:bg-emerald-600 text-center"
               >
                 Rozpocznij grę
               </Link>
               <Link
                 href="/admin"
-                className="rounded-full border border-emerald-500 px-6 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300"
+                className="w-full sm:w-auto rounded-full border border-emerald-500 px-6 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300 text-center"
               >
                 Panel admina
               </Link>

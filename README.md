@@ -4,7 +4,7 @@
 
 # Bezpieśniowy 🎧
 
-Bezpieśniowy to MVP quizu muzycznego, w którym zgadujesz polskie piosenki po coraz dłuższych fragmentach audio (0.5s → 1s → 2s → 5s → 10s). Aplikacja działa lokalnie, odczytuje metadane ID3 z Twoich plików MP3, udostępnia panel administracyjny, JWT auth oraz testy jednostkowe.
+Bezpieśniowy to MVP quizu muzycznego, w którym zgadujesz piosenki po coraz dłuższych fragmentach audio (0.5s → 1s → 2s → 5s → 10s). Aplikacja działa lokalnie, odczytuje metadane ID3 z Twoich plików MP3, udostępnia panel administracyjny, JWT auth oraz testy jednostkowe.
 
 > ⚠️ **Pamiętaj o prawach autorskich** – korzystaj wyłącznie z plików, do których posiadasz prawa lub licencję. Projekt ma charakter edukacyjny i do użytku prywatnego.
 
@@ -146,4 +146,4 @@ Pomysły na kolejne iteracje:
 
 ---
 
-Made with ❤️ for prywatne, edukacyjne zgadywanie polskich hitów. Smacznego słuchania! 🎶
+Made with ❤️ for prywatne, edukacyjne zgadywanie utworów muzycznych. Smacznego słuchania! 🎶
