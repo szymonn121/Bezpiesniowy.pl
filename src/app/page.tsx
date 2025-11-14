@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AudioGuessGame } from "@/components/AudioGuessGame";
+import StartGameButton from "@/components/StartGameButton";
 
 export default function Home() {
   return (
@@ -19,12 +20,7 @@ export default function Home() {
               Twoich plików MP3.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="#gra"
-                className="w-full sm:w-auto rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow transition hover:bg-emerald-600 text-center"
-              >
-                Rozpocznij grę
-              </Link>
+              <StartGameButton />
               <Link
                 href="/admin"
                 className="w-full sm:w-auto rounded-full border border-emerald-500 px-6 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300 text-center"
@@ -36,7 +32,7 @@ export default function Home() {
           <div className="rounded-3xl border border-white/20 bg-white/60 p-6 text-sm text-slate-600 shadow-xl backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200">
             <h2 className="text-base font-semibold text-slate-900 dark:text-white">Jak to działa?</h2>
             <ul className="mt-4 space-y-3">
-              <li>1. Administrator dodaje lokalne pliki MP3 z metadanymi.</li>
+              <li>1. Administrator dodaje pliki MP3.</li>
               <li>2. Gra losuje utwór i udostępnia kolejne fragmenty audio.</li>
               <li>3. Zdobywasz punkty za szybkie odgadnięcie tytułu.</li>
               <li>4. Możesz grać jako gość lub po zalogowaniu zapisywać wyniki.</li>

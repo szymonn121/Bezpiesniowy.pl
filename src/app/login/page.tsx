@@ -35,14 +35,17 @@ export default async function LoginPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-16 sm:px-6 lg:px-8">
       <section className="grid gap-6 text-center">
-        <h1 className="text-4xl font-semibold text-white">Logowanie administratora</h1>
-        <p className="text-base text-slate-300">
-          Dostęp do panelu zarządzania biblioteką MP3 jest chroniony hasłem. Konto administratora powstaje w
-          trakcie seeda bazy danych.
+          <h1 className="text-4xl font-semibold text-white">Logowanie</h1>
+        <p className="text-base text-slate-300 max-w-2xl mx-auto">
+          Panel administracyjny umożliwia zarządzanie lokalną biblioteką MP3. Tylko konto z rolą administratora ma
+          dostęp do tego obszaru.
         </p>
       </section>
+
       <div className="mx-auto w-full max-w-xl">
-        <LoginForm />
+        <div className="rounded-2xl border border-white/6 bg-slate-900/50 p-6 shadow-lg">
+          <LoginForm />
+        </div>
       </div>
     </main>
   );

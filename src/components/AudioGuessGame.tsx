@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SNIPPET_DURATIONS_SECONDS } from "@/lib/game";
+import SaveScore from "@/components/SaveScore";
 
 type Hint = {
   stage: number;
@@ -380,6 +381,10 @@ export function AudioGuessGame() {
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Zdobyte punkty: {feedback.score}</p>
           )}
         </div>
+      )}
+
+      {feedback?.correct && (
+        <SaveScore score={totalScore} onSaved={(id) => console.log("Saved leaderboard id", id)} />
       )}
 
       <footer className="grid gap-3 rounded-xl border border-slate-200/60 bg-slate-100/80 p-4 text-sm dark:border-slate-700 dark:bg-slate-900/60">

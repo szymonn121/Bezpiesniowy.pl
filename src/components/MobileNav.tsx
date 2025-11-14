@@ -31,16 +31,25 @@ export default function MobileNav({ userEmail, userRole }: Props) {
       {open && (
         <div className="absolute left-4 right-4 top-16 z-50 rounded-lg border border-white/10 bg-slate-950/95 p-4 shadow-lg">
           <nav className="flex flex-col gap-3">
+            
             <Link href="/" className="block rounded-md px-3 py-2 text-sm hover:bg-white/5">
               Gra
+            </Link>
+            <Link href="/leaderboard" className="block rounded-md px-3 py-2 text-sm hover:bg-white/5">
+              Ranking
             </Link>
             <Link href="/admin" className="block rounded-md px-3 py-2 text-sm hover:bg-white/5">
               Panel admina
             </Link>
             {!userEmail && (
-              <Link href="/login" className="block rounded-md px-3 py-2 text-sm hover:bg-white/5">
-                Zaloguj się
-              </Link>
+              <>
+                <Link href="/login" className="block rounded-md px-3 py-2 text-sm hover:bg-white/5">
+                  Zaloguj się
+                </Link>
+                <Link href="/register" className="block rounded-md px-3 py-2 text-sm hover:bg-white/5">
+                  Zarejestruj
+                </Link>
+              </>
             )}
 
             {userEmail && (

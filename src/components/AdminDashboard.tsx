@@ -225,15 +225,29 @@ export function AdminDashboard() {
                   fd.append("file", file);
                   const res = await fetch("/api/admin/parse-metadata", { method: "POST", body: fd });
                   if (res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    const metaTitle = data.title ?? "";
-                    const metaArtist = data.artist ?? "";
-                    const metaAlbum = data.album ?? "";
-                    if (metaArtist && !artistInput) setArtistInput(metaArtist);
-                    if (metaTitle && !titleInput) setTitleInput(metaTitle);
-                    if (metaAlbum && !albumInput) setAlbumInput(metaAlbum);
-                    if (metaArtist || metaTitle || metaAlbum) return;
-                  }
+                      const data = await res.json().catch(() => ({}));
+                      const metaTitle = data.title ?? "";
+                      const metaArtist = data.artist ?? "";
+                      const metaAlbum = data.album ?? "";
+                      const metaYear = data.year ?? null;
+                      const metaGenre = data.genre ?? null;
+                      if (metaArtist && !artistInput) setArtistInput(metaArtist);
+                      if (metaTitle && !titleInput) setTitleInput(metaTitle);
+                      if (metaAlbum && !albumInput) setAlbumInput(metaAlbum);
+                      if (metaYear && !yearInput) setYearInput(Number(metaYear));
+                      if (metaGenre) {
+                        // If parsed genre matches one of the options, select it; otherwise use Other
+                        const known = ["Pop", "Rock", "Hip-Hop", "Disco - polo", "Electronic", "Folk", "Jazz"];
+                        if (known.includes(metaGenre)) {
+                          setGenreSelect(metaGenre);
+                          setGenreOther("");
+                        } else {
+                          setGenreSelect("Other");
+                          setGenreOther(metaGenre);
+                        }
+                      }
+                      if (metaArtist || metaTitle || metaAlbum || metaYear || metaGenre) return;
+                    }
                 } catch (err) {
                   console.warn("parse-metadata API failed", err);
                 }

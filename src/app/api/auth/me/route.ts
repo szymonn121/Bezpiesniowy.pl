@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       id: user.id,
       email: user.email,
       role: user.role,
+      nickname: (user as any).nickname ?? null,
     },
   });
 }

@@ -45,16 +45,27 @@ export default async function RootLayout({
                 <Link href="/" className="transition hover:text-white">
                   Gra
                 </Link>
+                <Link href="/leaderboard" className="transition hover:text-white">
+                  Ranking
+                </Link>
                 <Link href="/admin" className="transition hover:text-white">
                   Panel admina
                 </Link>
                 {!user && (
-                  <Link
-                    href="/login"
-                    className="rounded-full border border-emerald-400 px-4 py-1.5 text-emerald-300 transition hover:bg-emerald-500/10"
-                  >
-                    Zaloguj się
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/login"
+                      className="rounded-full border border-emerald-400 px-4 py-1.5 text-emerald-300 transition hover:bg-emerald-500/10"
+                    >
+                      Zaloguj się
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="rounded-full border border-slate-600 px-3 py-1 text-sm text-slate-200 transition hover:bg-white/5"
+                    >
+                      Zarejestruj
+                    </Link>
+                  </div>
                 )}
                 {user && (
                   <div className="flex items-center gap-3">

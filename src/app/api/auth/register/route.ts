@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/auth";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password } = body ?? {};
+    const { email, password, nickname } = body ?? {};
 
     if (!email || !password) {
       return NextResponse.json({ message: "Email i hasło są wymagane" }, { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       data: {
         email,
         passwordHash,
+        nickname: nickname ?? null,
       },
     });
 
