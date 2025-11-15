@@ -20,6 +20,11 @@ export function AdminDashboard() {
   const [uploading, setUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Leaderboard form
+  const [leaderboardNickname, setLeaderboardNickname] = useState<string>("");
+  const [leaderboardScore, setLeaderboardScore] = useState<number | null>(null);
+  const [addingLeaderboard, setAddingLeaderboard] = useState(false);
+
   // Controlled form fields so we can prefill from filename
   const [titleInput, setTitleInput] = useState<string>("");
   const [artistInput, setArtistInput] = useState<string>("");
@@ -98,6 +103,46 @@ export function AdminDashboard() {
     },
     [loadSongs],
   );
+
+  const handleAddLeaderboardEntry = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    setAddingLeaderboard(true);
+
+    if (!leaderboardNickname.trim()) {
+      setError("Nickname jest wymagany");
+      setAddingLeaderboard(false);
+      return;
+    }
+
+    if (leaderboardScore == null || leaderboardScore < 0) {
+      setError("Wynik musi być liczbą >= 0");
+      setAddingLeaderboard(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/leaderboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: leaderboardNickname, score: leaderboardScore }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message ?? "Nie udało się dodać wpisu do leaderboardu");
+      }
+
+      setSuccessMessage(`Dodano wpis: ${data.entry.nickname} (${data.entry.score} pkt)`);
+      setLeaderboardNickname("");
+      setLeaderboardScore(null);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Wystąpił błąd podczas dodawania wpisu");
+    } finally {
+      setAddingLeaderboard(false);
+    }
+  }, [leaderboardNickname, leaderboardScore]);
 
   const songCount = songs.length;
 
@@ -287,6 +332,50 @@ export function AdminDashboard() {
               {successMessage}
             </p>
           )}
+        </form>
+      </section>
+
+      <section className="grid gap-4 rounded-2xl border border-white/10 bg-slate-950/40 p-6 shadow-xl backdrop-blur">
+        <header className="grid gap-2">
+          <h2 className="text-xl font-semibold text-white">Dodaj wpis do leaderboardu</h2>
+          <p className="text-sm text-slate-300">
+            Ręcznie dodaj wpis do tabeli wyników (np. wynik z gry offline lub testowy wpis).
+          </p>
+        </header>
+
+        <form onSubmit={handleAddLeaderboardEntry} className="grid gap-4 rounded-2xl border border-white/10 bg-slate-900/50 p-6">
+          <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+            <label className="grid gap-2 text-sm text-slate-200">
+              <span>Nickname <span className="text-emerald-400">*</span></span>
+              <input
+                name="nickname"
+                value={leaderboardNickname}
+                onChange={(e) => setLeaderboardNickname(e.target.value)}
+                placeholder="np. ProGamer123"
+                maxLength={32}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </label>
+            <label className="grid gap-2 text-sm text-slate-200">
+              <span>Wynik <span className="text-emerald-400">*</span></span>
+              <input
+                name="score"
+                type="number"
+                min={0}
+                value={leaderboardScore ?? ""}
+                onChange={(e) => setLeaderboardScore(e.target.value ? Number(e.target.value) : null)}
+                placeholder="np. 150"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </label>
+          </div>
+          <button
+            type="submit"
+            disabled={addingLeaderboard}
+            className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600 disabled:opacity-60"
+          >
+            {addingLeaderboard ? "Dodawanie..." : "Dodaj do leaderboardu"}
+          </button>
         </form>
       </section>
 
