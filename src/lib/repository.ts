@@ -29,14 +29,14 @@ const memory = (() => {
   const users: UserRecord[] = [];
   const leaderboard: LeaderboardEntryRecord[] = [];
   return {
-    createUser(data: Omit<UserRecord, "id" | "createdAt" | "updatedAt"> & { nickname?: string | null }) {
+    createUser(data: Omit<UserRecord, "id" | "createdAt" | "updatedAt">) {
       const now = new Date();
       const user: UserRecord = {
         id: userIdCounter++,
         email: data.email,
         passwordHash: data.passwordHash,
         nickname: data.nickname ?? null,
-        role: data.role ?? "USER",
+        role: data.role,
         createdAt: now,
         updatedAt: now,
       };
@@ -72,16 +72,17 @@ const memory = (() => {
 export const repo = {
   isMemory: useMemory,
   async createUser(data: { email: string; passwordHash: string; nickname?: string | null; role?: "USER" | "ADMIN" }) {
+    const userRecord = {
+      email: data.email,
+      passwordHash: data.passwordHash,
+      nickname: data.nickname ?? null,
+      role: data.role ?? "USER" as "USER" | "ADMIN",
+    };
     if (useMemory) {
-      return memory.createUser(data);
+      return memory.createUser(userRecord);
     }
     return prisma.user.create({
-      data: {
-        email: data.email,
-        passwordHash: data.passwordHash,
-        nickname: data.nickname ?? null,
-        role: data.role ?? "USER",
-      },
+      data: userRecord,
     }) as any;
   },
   async findUserByEmail(email: string) {
