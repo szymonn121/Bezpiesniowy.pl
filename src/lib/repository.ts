@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { promises as fs } from "fs";
+import path from "path";
 
 // Prosty fallback bez bazy danych: dane w pamięci procesu.
 // Aktywacja: ustaw zmienną środowiskową USE_MEMORY_STORE=true lub brak DATABASE_URL.
@@ -22,6 +24,70 @@ type LeaderboardEntryRecord = {
 };
 
 const useMemory = process.env.USE_MEMORY_STORE === "true";
+
+// Leaderboard backup (JSON) – simple durability across restarts
+const leaderboardBackupPath = path.join(process.cwd(), "data", "leaderboard-backup.json");
+let leaderboardRestoreAttempted = false;
+
+type BackupEntry = { nickname: string; score: number; userId?: number | null; createdAt?: string };
+
+async function readLeaderboardBackup(): Promise<BackupEntry[]> {
+  try {
+    const raw = await fs.readFile(leaderboardBackupPath, "utf-8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function appendLeaderboardBackup(entry: { nickname: string; score: number; userId?: number | null; createdAt: Date }) {
+  try {
+    await fs.mkdir(path.dirname(leaderboardBackupPath), { recursive: true });
+    const current = await readLeaderboardBackup();
+    current.push({
+      nickname: entry.nickname,
+      score: entry.score,
+      userId: entry.userId ?? null,
+      createdAt: entry.createdAt.toISOString(),
+    });
+    await fs.writeFile(leaderboardBackupPath, JSON.stringify(current, null, 2), "utf-8");
+  } catch {
+    // best-effort; ignore backup write errors
+  }
+}
+
+async function ensureLeaderboardRestore() {
+  if (leaderboardRestoreAttempted) return;
+  leaderboardRestoreAttempted = true;
+  const backup = await readLeaderboardBackup();
+  if (!backup.length) return;
+
+  try {
+    if (useMemory) {
+      for (const e of backup) {
+        memory.createLeaderboardEntry({ nickname: e.nickname, score: e.score, userId: e.userId ?? null });
+      }
+      return;
+    }
+    const existingAny = (await prisma.leaderboardEntry.findMany({ take: 1 })) as any[];
+    if (!existingAny || existingAny.length === 0) {
+      for (const e of backup) {
+        await prisma.leaderboardEntry
+          .create({
+            data: {
+              nickname: e.nickname.slice(0, 32),
+              score: Math.floor(e.score),
+              userId: e.userId ?? undefined,
+            },
+          })
+          .catch(() => {});
+      }
+    }
+  } catch {
+    // ignore restore errors
+  }
+}
 
 const memory = (() => {
   let userIdCounter = 1;
@@ -94,16 +160,29 @@ export const repo = {
     return prisma.user.findUnique({ where: { id } }) as any;
   },
   async createLeaderboardEntry(data: { nickname: string; score: number; userId?: number | null }) {
-    if (useMemory) return memory.createLeaderboardEntry(data);
-    return prisma.leaderboardEntry.create({
+    await ensureLeaderboardRestore();
+    if (useMemory) {
+      const entry = memory.createLeaderboardEntry(data);
+      await appendLeaderboardBackup(entry);
+      return entry as any;
+    }
+    const entry = await prisma.leaderboardEntry.create({
       data: {
         nickname: data.nickname.slice(0, 32),
         score: Math.floor(data.score),
         userId: data.userId ?? undefined,
       },
-    }) as any;
+    });
+    await appendLeaderboardBackup({
+      nickname: entry.nickname,
+      score: entry.score,
+      userId: (entry as any).userId ?? null,
+      createdAt: (entry as any).createdAt ?? new Date(),
+    });
+    return entry as any;
   },
   async listLeaderboard(limit: number) {
+    await ensureLeaderboardRestore();
     if (useMemory) return memory.listLeaderboard(limit);
     return prisma.leaderboardEntry.findMany({
       orderBy: { score: "desc" },
