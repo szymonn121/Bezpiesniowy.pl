@@ -21,7 +21,7 @@ type LeaderboardEntryRecord = {
   createdAt: Date;
 };
 
-const useMemory = process.env.USE_MEMORY_STORE === "true" || !process.env.DATABASE_URL;
+const useMemory = process.env.USE_MEMORY_STORE === "true";
 
 const memory = (() => {
   let userIdCounter = 1;
