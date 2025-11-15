@@ -69,7 +69,7 @@ declare module "@prisma/client" {
       create: (...args: any[]) => Promise<GuessSession>;
       deleteMany: (...args: any[]) => Promise<any>;
     };
-    leaderboardEntry?: {
+    leaderboardEntry: {
       findMany: (...args: any[]) => Promise<LeaderboardEntry[]>;
       create: (...args: any[]) => Promise<LeaderboardEntry>;
     };
