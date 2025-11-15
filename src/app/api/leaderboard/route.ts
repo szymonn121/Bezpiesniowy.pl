@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { repo } from "@/lib/repository";
 import { getUserFromRequest } from "@/lib/server-auth";
 
 export async function GET() {
-  // return top 50 entries
-  const entries = await prisma.leaderboardEntry.findMany({
-    orderBy: { score: "desc" },
-    take: 50,
-    include: { user: { select: { id: true, email: true } } },
-  });
+  const entries = await repo.listLeaderboard(50);
   return NextResponse.json({ entries });
 }
 
@@ -25,17 +20,18 @@ export async function POST(request: Request) {
     // create a fake NextRequest-like object for getUserFromRequest? The helper expects NextRequest, so we'll duplicate minimal logic here.
     const user = null; // keep simple: attach user on server side if needed in future
 
-    const entry = await prisma.leaderboardEntry.create({
-      data: {
-        nickname: String(nickname).slice(0, 32),
-        score: Math.floor(score),
-        userId: (user as any)?.id ?? undefined,
-      },
+    const entry = await repo.createLeaderboardEntry({
+      nickname: String(nickname),
+      score: score,
+      userId: (user as any)?.id ?? null,
     });
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch (err) {
     console.error("Leaderboard save error", err);
+    if ((err as any)?.message?.includes("connect") || (err as any)?.message?.includes("database")) {
+      return NextResponse.json({ message: "Database error: check DATABASE_URL and migrations" }, { status: 500 });
+    }
     return NextResponse.json({ message: "Nie udało się zapisać wyniku" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/server-auth";
+import { repo } from "@/lib/repository";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -12,8 +13,9 @@ export async function GET(request: NextRequest) {
     user: {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: (user as any).role ?? "USER",
       nickname: (user as any).nickname ?? null,
+      memory: repo.isMemory,
     },
   });
 }

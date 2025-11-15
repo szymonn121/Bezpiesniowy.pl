@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
+import { repo } from "@/lib/repository";
 import { TOKEN_COOKIE, extractTokenFromHeader, getTokenFromCookies, verifyAuthToken } from "@/lib/auth";
 
 export async function getUserFromRequest(request: NextRequest) {
@@ -12,9 +12,7 @@ export async function getUserFromRequest(request: NextRequest) {
   const payload = verifyAuthToken(token);
   if (!payload) return null;
 
-  return prisma.user.findUnique({
-    where: { id: payload.userId },
-  });
+  return repo.getUserById(payload.userId);
 }
 
 export async function requireAdmin(request: NextRequest) {
@@ -45,7 +43,5 @@ export async function getCurrentUserFromCookies(req?: any) {
   const payload = verifyAuthToken(token);
   if (!payload) return null;
 
-  return prisma.user.findUnique({
-    where: { id: payload.userId },
-  });
+  return repo.getUserById(payload.userId);
 }

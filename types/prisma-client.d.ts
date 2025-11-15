@@ -5,6 +5,7 @@ declare module "@prisma/client" {
     id: number;
     email: string;
     passwordHash: string;
+    nickname?: string | null;
     role: UserRole;
     createdAt: Date;
     updatedAt: Date;
@@ -34,6 +35,14 @@ declare module "@prisma/client" {
     createdAt: Date;
   }
 
+  export interface LeaderboardEntry {
+    id: number;
+    userId?: number | null;
+    nickname: string;
+    score: number;
+    createdAt: Date;
+  }
+
   export interface PrismaClientOptions {
     log?: any;
   }
@@ -59,6 +68,10 @@ declare module "@prisma/client" {
     guessSession: {
       create: (...args: any[]) => Promise<GuessSession>;
       deleteMany: (...args: any[]) => Promise<any>;
+    };
+    leaderboardEntry?: {
+      findMany: (...args: any[]) => Promise<LeaderboardEntry[]>;
+      create: (...args: any[]) => Promise<LeaderboardEntry>;
     };
     [key: string]: any;
   }

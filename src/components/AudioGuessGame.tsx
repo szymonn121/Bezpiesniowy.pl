@@ -43,15 +43,18 @@ export function AudioGuessGame() {
   const [guess, setGuess] = useState("");
   const [loadingChallenge, setLoadingChallenge] = useState(false);
   const [feedback, setFeedback] = useState<GuessResult | null>(null);
+  const [roundEnded, setRoundEnded] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [history, setHistory] = useState<GuessResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [stageBeingPlayed, setStageBeingPlayed] = useState<number | null>(null);
+  const [lastSkipped, setLastSkipped] = useState<GuessResult | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const durations = useMemo(
     () => challenge?.snippetDurations ?? FALLBACK_DURATIONS,
@@ -74,6 +77,10 @@ export function AudioGuessGame() {
   useEffect(() => {
     return () => {
       resetAudio();
+      if (skipTimeoutRef.current) {
+        clearTimeout(skipTimeoutRef.current);
+        skipTimeoutRef.current = null;
+      }
       if (audioRef.current) {
         audioRef.current.src = "";
         audioRef.current.load();
@@ -85,6 +92,7 @@ export function AudioGuessGame() {
     setLoadingChallenge(true);
     setError(null);
     setFeedback(null);
+    setRoundEnded(false);
     setGuess("");
     setAttempts(0);
     setMaxUnlockedStage(0);
@@ -176,7 +184,7 @@ export function AudioGuessGame() {
     [challenge, durations, maxUnlockedStage, resetAudio],
   );
 
-  const submitGuess = useCallback(
+    const submitGuess = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (!challenge || !guess.trim()) {
@@ -208,8 +216,11 @@ export function AudioGuessGame() {
         }
 
         if (result.correct) {
+          // gdy trafi poprawnie, wyczyść poprzedni skip panel
+          setLastSkipped(null);
           setTotalScore((prev) => prev + result.score);
           setStreak((prev) => prev + 1);
+          setRoundEnded(true);
           setHistory((prev) => [
             {
               ...result,
@@ -325,7 +336,7 @@ export function AudioGuessGame() {
           >
             Sprawdź odpowiedź
           </button>
-          {feedback?.correct && (
+          {(feedback?.correct || roundEnded) && (
             <button
               type="button"
               onClick={handleNextSong}
@@ -335,23 +346,32 @@ export function AudioGuessGame() {
               Następna piosenka
             </button>
           )}
-          {!feedback?.correct && (
+          {!roundEnded && !feedback?.correct && (
             <button
               type="button"
               onClick={() => {
-                // reveal correct answer for current challenge
-                if (challenge) {
-                  setFeedback({
-                    correct: false,
-                    score: 0,
-                    message: "Pominięto — oto poprawna odpowiedź:",
-                    answer: {
-                      title: (challenge as any).title ?? "",
-                      artist: (challenge as any).hints?.length ? ((challenge as any).hints.find((h:any)=>h.label.includes('Wykonawca'))?.value ?? '') : '' ,
-                    },
-                  });
-                }
+                // Immediately advance to the next challenge and record the skipped answer in history
+                if (!challenge) return;
+
+                const title = (challenge as any).title ?? "";
+                const artist = (challenge as any).artist ?? ((challenge as any).hints?.length
+                  ? ((challenge as any).hints.find((h: any) => h.label.includes("Wykonawca"))?.value ?? "")
+                  : "");
+
+                const message = `Pominięto — poprawna odpowiedź: ${artist} – ${title}`;
+                const skipped: GuessResult = {
+                  correct: false,
+                  score: 0,
+                  message,
+                  answer: { title, artist },
+                };
+                setHistory((prev) => [skipped, ...prev]);
+                // pokaż panel z poprzednią odpowiedzią mimo nowej rundy
+                setLastSkipped(skipped);
+
+                // stop playback and immediately load a new challenge
                 resetAudio();
+                loadChallenge();
               }}
               disabled={loadingChallenge}
               className="w-full sm:w-auto rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -379,6 +399,17 @@ export function AudioGuessGame() {
           <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Próby: {attempts}</p>
           {feedback.correct && (
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Zdobyte punkty: {feedback.score}</p>
+          )}
+        </div>
+      )}
+
+      {lastSkipped && !feedback?.correct && (
+        <div className="rounded-xl border border-slate-300/60 bg-white/80 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/50">
+          <p className="font-semibold">{lastSkipped.message}</p>
+          {lastSkipped.answer && (
+            <p className="text-xs text-slate-700 dark:text-slate-200/80">
+              Poprzedni utwór: {lastSkipped.answer.artist} – {lastSkipped.answer.title}
+            </p>
           )}
         </div>
       )}
