@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SNIPPET_DURATIONS_SECONDS } from "@/lib/game";
+import { SNIPPET_DURATIONS_SECONDS, normalizeAnswer } from "@/lib/game";
 import SaveScore from "@/components/SaveScore";
 
 type Hint = {
@@ -49,12 +49,17 @@ export function AudioGuessGame() {
   const [history, setHistory] = useState<GuessResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [stageBeingPlayed, setStageBeingPlayed] = useState<number | null>(null);
   const [lastSkipped, setLastSkipped] = useState<GuessResult | null>(null);
+  const [allTitles, setAllTitles] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const plannedEndTsRef = useRef<number | null>(null);
+  const remainingMsRef = useRef<number | null>(null);
 
   const durations = useMemo(
     () => challenge?.snippetDurations ?? FALLBACK_DURATIONS,
@@ -71,10 +76,24 @@ export function AudioGuessGame() {
       audioRef.current.currentTime = 0;
     }
     setIsPlaying(false);
+    setIsPaused(false);
     setStageBeingPlayed(null);
+    plannedEndTsRef.current = null;
+    remainingMsRef.current = null;
   }, []);
 
   useEffect(() => {
+    // preload titles for suggestions
+    (async () => {
+      try {
+        const res = await fetch("/api/songs/titles");
+        if (res.ok) {
+          const data = (await res.json().catch(() => ({}))) as { titles?: string[] };
+          if (Array.isArray(data.titles)) setAllTitles(data.titles);
+        }
+      } catch {}
+    })();
+
     return () => {
       resetAudio();
       if (skipTimeoutRef.current) {
@@ -167,14 +186,20 @@ export function AudioGuessGame() {
         await audio.play();
 
         const duration = durations[stageIndex] ?? FALLBACK_DURATIONS[stageIndex] ?? 2;
+        const durationMs = duration * 1000;
+        plannedEndTsRef.current = Date.now() + durationMs;
+        remainingMsRef.current = durationMs;
 
         playTimeoutRef.current = setTimeout(() => {
           audio.pause();
           audio.currentTime = 0;
           setIsPlaying(false);
+          setIsPaused(false);
           setStageBeingPlayed(null);
           setMaxUnlockedStage((prev) => Math.max(prev, stageIndex + 1));
-        }, duration * 1000);
+          plannedEndTsRef.current = null;
+          remainingMsRef.current = null;
+        }, durationMs);
       } catch (err) {
         console.error("Audio play error", err);
         setError("Nie udało się odtworzyć fragmentu. Spróbuj ponownie.");
@@ -183,6 +208,47 @@ export function AudioGuessGame() {
     },
     [challenge, durations, maxUnlockedStage, resetAudio],
   );
+
+  const handlePause = useCallback(() => {
+    if (!isPlaying || !audioRef.current) return;
+    if (playTimeoutRef.current) {
+      clearTimeout(playTimeoutRef.current);
+      playTimeoutRef.current = null;
+    }
+    const now = Date.now();
+    if (plannedEndTsRef.current) {
+      remainingMsRef.current = Math.max(0, plannedEndTsRef.current - now);
+    }
+    audioRef.current.pause();
+    setIsPaused(true);
+    setIsPlaying(false);
+  }, [isPlaying]);
+
+  const handleResume = useCallback(async () => {
+    if (!audioRef.current || stageBeingPlayed == null || isPaused !== true) return;
+    try {
+      await audioRef.current.play();
+      setIsPlaying(true);
+      setIsPaused(false);
+      const remain = remainingMsRef.current ?? 0;
+      plannedEndTsRef.current = Date.now() + remain;
+      playTimeoutRef.current = setTimeout(() => {
+        if (!audioRef.current) return;
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsPlaying(false);
+        setIsPaused(false);
+        setMaxUnlockedStage((prev) => Math.max(prev, stageBeingPlayed + 1));
+        setStageBeingPlayed(null);
+        plannedEndTsRef.current = null;
+        remainingMsRef.current = null;
+      }, remain);
+    } catch (err) {
+      console.error("Audio resume error", err);
+      setError("Nie udało się wznowić odtwarzania.");
+      resetAudio();
+    }
+  }, [isPaused, resetAudio, stageBeingPlayed]);
 
     const submitGuess = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -271,7 +337,7 @@ export function AudioGuessGame() {
                 key={duration}
                 type="button"
                 onClick={() => handlePlayStage(index)}
-                disabled={!unlocked || isPlaying}
+                disabled={!unlocked || isPlaying || isPaused}
                 className={`w-full sm:w-auto rounded-full border px-4 py-2 text-sm font-medium transition ${
                   active
                     ? "border-emerald-500 bg-emerald-500 text-white shadow"
@@ -284,6 +350,24 @@ export function AudioGuessGame() {
               </button>
             );
           })}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={handlePause}
+              disabled={!isPlaying}
+              className="w-full sm:w-auto rounded-full border border-slate-400 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Pauza
+            </button>
+            <button
+              type="button"
+              onClick={handleResume}
+              disabled={!isPaused}
+              className="w-full sm:w-auto rounded-full border border-emerald-400 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
+            >
+              Wznów
+            </button>
+          </div>
         </div>
         {canAdvance && (
           <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -320,14 +404,46 @@ export function AudioGuessGame() {
         <label className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Twoja odpowiedź
         </label>
+        <div className="relative">
         <input
           type="text"
           value={guess}
-          onChange={(event) => setGuess(event.target.value)}
+          onChange={(event) => {
+            setGuess(event.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           placeholder="np. Cykady na Cykladach"
           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           disabled={feedback?.correct}
         />
+        {showSuggestions && guess.trim() && (
+          <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-300 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            {allTitles
+              .filter((t) => normalizeAnswer(t).includes(normalizeAnswer(guess)))
+              .slice(0, 7)
+              .map((t) => (
+                <li key={t}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setGuess(t);
+                      setShowSuggestions(false);
+                    }}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800"
+                  >
+                    {t}
+                  </button>
+                </li>
+              ))}
+            {allTitles.filter((t) => normalizeAnswer(t).includes(normalizeAnswer(guess))).length === 0 && (
+              <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">Brak podpowiedzi</li>
+            )}
+          </ul>
+        )}
+        </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="submit"
