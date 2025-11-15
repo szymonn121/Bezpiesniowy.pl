@@ -42,9 +42,13 @@ export async function POST(request: NextRequest) {
       title: titleInput || metadata.title || "Nieznany tytuł",
       artist: artistInput || metadata.artist || "Nieznany wykonawca",
       album: albumInput || metadata.album,
-  // Only use the year provided in the upload form. Do not fall back to metadata.year.
-  year: yearInput ? Number.parseInt(yearInput, 10) || null : null,
-      genre: genreInput || metadata.genre,
+      year:
+        yearInput && yearInput.length > 0
+          ? Number.isNaN(Number.parseInt(yearInput, 10))
+            ? null
+            : Number.parseInt(yearInput, 10)
+          : metadata.year ?? null,
+      genre: (genreInput && genreInput.length > 0 ? genreInput : metadata.genre) ?? null,
       durationSeconds: metadata.durationSeconds,
       fileName,
     },
