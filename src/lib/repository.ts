@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { promises as fs } from "fs";
 import path from "path";
+import { hasS3, getObjectText, putObject } from "@/lib/s3";
 
 // Prosty fallback bez bazy danych: dane w pamięci procesu.
 // Aktywacja: ustaw zmienną środowiskową USE_MEMORY_STORE=true lub brak DATABASE_URL.
@@ -27,11 +28,20 @@ const useMemory = process.env.USE_MEMORY_STORE === "true";
 
 // Leaderboard backup (JSON) – simple durability across restarts
 const leaderboardBackupPath = path.join(process.cwd(), "data", "leaderboard-backup.json");
+const leaderboardBackupKey = process.env.LEADERBOARD_BACKUP_KEY || "backups/leaderboard-backup.json";
 let leaderboardRestoreAttempted = false;
 
 type BackupEntry = { nickname: string; score: number; userId?: number | null; createdAt?: string };
 
 async function readLeaderboardBackup(): Promise<BackupEntry[]> {
+  try {
+    if (hasS3() && process.env.S3_BUCKET) {
+      const raw = await getObjectText(leaderboardBackupKey, process.env.S3_BUCKET);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch {}
   try {
     const raw = await fs.readFile(leaderboardBackupPath, "utf-8");
     const parsed = JSON.parse(raw);
@@ -42,16 +52,22 @@ async function readLeaderboardBackup(): Promise<BackupEntry[]> {
 }
 
 async function appendLeaderboardBackup(entry: { nickname: string; score: number; userId?: number | null; createdAt: Date }) {
+  const nextItem: BackupEntry = {
+    nickname: entry.nickname,
+    score: entry.score,
+    userId: entry.userId ?? null,
+    createdAt: entry.createdAt.toISOString(),
+  };
   try {
-    await fs.mkdir(path.dirname(leaderboardBackupPath), { recursive: true });
     const current = await readLeaderboardBackup();
-    current.push({
-      nickname: entry.nickname,
-      score: entry.score,
-      userId: entry.userId ?? null,
-      createdAt: entry.createdAt.toISOString(),
-    });
-    await fs.writeFile(leaderboardBackupPath, JSON.stringify(current, null, 2), "utf-8");
+    current.push(nextItem);
+    const json = JSON.stringify(current, null, 2);
+    if (hasS3() && process.env.S3_BUCKET) {
+      await putObject({ key: leaderboardBackupKey, body: Buffer.from(json, "utf-8"), contentType: "application/json" });
+      return;
+    }
+    await fs.mkdir(path.dirname(leaderboardBackupPath), { recursive: true });
+    await fs.writeFile(leaderboardBackupPath, json, "utf-8");
   } catch {
     // best-effort; ignore backup write errors
   }

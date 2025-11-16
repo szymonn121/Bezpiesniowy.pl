@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { SNIPPET_DURATIONS_SECONDS } from "@/lib/game";
+import { hasS3, s3PublicUrl } from "@/lib/s3";
 import { cookies } from "next/headers";
 
 export async function GET() {
@@ -34,7 +35,7 @@ export async function GET() {
     title: song.title,
     artist: song.artist,
     songId: song.id,
-    audioUrl: `/audio/${song.fileName}`,
+    audioUrl: hasS3() ? s3PublicUrl(song.fileName) : `/audio/${song.fileName}`,
     hints: buildHints({
       title: song.title,
       artist: song.artist,

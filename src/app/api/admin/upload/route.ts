@@ -3,6 +3,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import * as mm from "music-metadata";
 import { prisma } from "@/lib/prisma";
+import { hasS3, putObject } from "@/lib/s3";
 import { requireAdmin } from "@/lib/server-auth";
 
 export const runtime = "nodejs";
@@ -27,15 +28,20 @@ export async function POST(request: NextRequest) {
   const genreInput = formData.get("genre")?.toString().trim();
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const uploadDir = path.join(process.cwd(), "public", "audio");
-  await fs.mkdir(uploadDir, { recursive: true });
-
   const fileName = buildFileName(file.name);
-  const filePath = path.join(uploadDir, fileName);
-
   const metadata = await readMetadata(buffer, file.type);
 
-  await fs.writeFile(filePath, buffer);
+  let storedKeyOrName = fileName;
+  if (hasS3()) {
+    const key = `audio/${fileName}`;
+    await putObject({ key, body: buffer, contentType: file.type || "audio/mpeg" });
+    storedKeyOrName = key;
+  } else {
+    const uploadDir = path.join(process.cwd(), "public", "audio");
+    await fs.mkdir(uploadDir, { recursive: true });
+    const filePath = path.join(uploadDir, fileName);
+    await fs.writeFile(filePath, buffer);
+  }
 
   const song = await prisma.song.create({
     data: {
@@ -50,7 +56,7 @@ export async function POST(request: NextRequest) {
           : metadata.year ?? null,
       genre: (genreInput && genreInput.length > 0 ? genreInput : metadata.genre) ?? null,
       durationSeconds: metadata.durationSeconds,
-      fileName,
+      fileName: storedKeyOrName,
     },
   });
 
